@@ -2,7 +2,7 @@
 title: API Integration
 description: Create and use API keys to integrate ProteX blacklist checks into your bot or application
 category: guides
-order: 3
+order: 1
 ---
 
 # API Integration Guide
