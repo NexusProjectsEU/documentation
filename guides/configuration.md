@@ -81,9 +81,8 @@ Switch to the **"Audit"** tab to view:
 After saving your configuration:
 
 1. **Check Permissions**: Verify ProteX has the required Discord permissions
-2. **Test Channels**: Send a test message to verify channel access
-3. **Monitor Audit Log**: Check the audit tab to confirm your changes were recorded
-4. **Verify Actions**: Test with a known blocked user (if safe to do so)
+2. **Monitor Audit Log**: Check the audit tab to confirm your changes were recorded
+3. **Verify Actions**: Test with a known blocked user (if safe to do so)
 
 ---
 
