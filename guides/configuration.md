@@ -12,7 +12,7 @@ This guide will walk you through configuring ProteX to tailor its security featu
 ---
 
 ## 1. Access the Configuration Panel
-1. **Sign In**: Log in to your ProteX Dashboard using Discord at [protex.noxitech.dk/dashboard/server](https://protex.noxitech.dk/dashboard/server).
+1. **Sign In**: Log in to your ProteX Dashboard using Discord at [nxpdev.dk/dashboard/server](https://nxpdev.dk/dashboard/server).
 2. **Select Your Server**: From the dashboard, choose the server you wish to configure.
 3. **Navigate to Settings**: Click the `Configure Server` button to configure your server.
 

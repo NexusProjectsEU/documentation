@@ -42,7 +42,7 @@ PROTEX_API_KEY=sk_••••••••••••••••••••�
 
 ```bash
 curl -H "Authorization: Bearer sk_••••••••••••••••••••••••••••" \
-  "https://protex.noxitech.dk/api/blocked/123456789012345678"
+  "https://nxpdev.dk/api/blocked/123456789012345678"
 ```
 
 ### Response (Not Blocked)
@@ -73,7 +73,7 @@ curl -H "Authorization: Bearer sk_•••••••••••••••�
 
 ```javascript
 const PROTEX_API_KEY = process.env.PROTEX_API_KEY;
-const BASE_URL = "https://protex.noxitech.dk";
+const BASE_URL = "https://nxpdev.dk";
 
 async function isProtexBlacklisted(userId) {
   try {
@@ -104,7 +104,7 @@ import aiohttp
 import os
 
 API_KEY = os.getenv("PROTEX_API_KEY")
-BASE_URL = "https://protex.noxitech.dk"
+BASE_URL = "https://nxpdev.dk"
 
 async def check_protex(user_id: str):
     async with aiohttp.ClientSession() as session:
