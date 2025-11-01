@@ -2,7 +2,7 @@
 title: Configuration
 description: Learn how to configure ProteX for your server
 category: guides
-order: 2
+order: 0
 ---
 
 # Configuration Guide
