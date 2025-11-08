@@ -1,7 +1,6 @@
 ---
 title: Reporting Users
 description: Learn how to report users for review by the ProteX team
-category: guides
 order: 2
 ---
 

@@ -1,7 +1,6 @@
 ---
 title: Installation
 description: How to add ProteX to your Discord server
-category: getting-started
 order: 1
 ---
 

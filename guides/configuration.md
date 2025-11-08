@@ -1,7 +1,6 @@
 ---
 title: Configuration
 description: Learn how to configure ProteX for your server
-category: guides
 order: 0
 ---
 

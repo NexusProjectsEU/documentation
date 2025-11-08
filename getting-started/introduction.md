@@ -1,7 +1,6 @@
 ---
 title: Introduction
 description: Welcome to ProteX documentation
-category: getting-started
 order: 0
 ---
 

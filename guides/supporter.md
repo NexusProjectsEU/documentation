@@ -1,7 +1,6 @@
 ---
 title: Supporter Application
 description: Learn how to apply to become a Supporter for Protex
-category: guides
 order: 4
 ---
 

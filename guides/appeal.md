@@ -1,7 +1,6 @@
 ---
 title: Unblock Application
 description: Learn how to apply for block removal through appeal.gg
-category: guides
 order: 3
 ---
 
