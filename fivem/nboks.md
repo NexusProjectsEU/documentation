@@ -164,6 +164,65 @@ exports['nboks']:checkReminders(user_id)
 
 ---
 
+### chargePlayer
+
+Sends an invoice AND immediately charges the player. The invoice is created as already paid.
+
+**Syntax:**
+```lua
+local result = exports['nboks']:chargePlayer(identifier, sender, senderidentifier, invoiceType, amount, description)
+```
+
+**Parameters:**
+- `identifier` (string) - Target player's identifier
+- `sender` (string) - Name of the sender
+- `senderidentifier` (string) - Sender's identifier (optional, can be nil)
+- `invoiceType` (string) - Type of invoice: `"fine"` or `"invoice"`
+- `amount` (number) - Amount to charge
+- `description` (string) - Description (optional)
+
+**Returns:** A table with the result:
+
+```lua
+-- Success:
+{ success = true, reason = "paid", message = "Payment successful", invoice = {...} }
+
+-- Player not online:
+{ success = false, reason = "player_offline", message = "Player is not online" }
+
+-- Not enough money:
+{ success = false, reason = "insufficient_funds", message = "Player has insufficient funds", balance = 5000, required = 10000 }
+
+-- Payment failed:
+{ success = false, reason = "payment_failed", message = "Failed to remove money from player" }
+```
+
+**Example:**
+```lua
+local result = exports['nboks']:chargePlayer(
+    identifier,
+    "Hospital",
+    nil,
+    "invoice",
+    2500,
+    "Medical treatment"
+)
+
+if result.success then
+    print("Charged successfully! Invoice ID: " .. result.invoice.id)
+else
+    if result.reason == "insufficient_funds" then
+        print("Player only has " .. result.balance .. " but needs " .. result.required)
+    elseif result.reason == "player_offline" then
+        print("Player is not online")
+    end
+end
+```
+
+**Note:** Unlike `sendInvoice`, this export requires the player to be online and have sufficient funds.
+
+---
+
 ## Events
 
 ### Server Events
@@ -487,11 +546,18 @@ nboks.sv.discordwebhook = "https://discord.com/api/webhooks/..."
    - Fee percentage and amount
    - Old and new amounts
 
+4. **Player Charged (chargePlayer)**
+   - Player information
+   - Sender information
+   - Amount charged
+   - Invoice ID and description
+
 ### Webhook Colors
 
 - **Invoice Sent (Fine):** Red (15158332)
 - **Invoice Sent (Invoice):** Blue (3447003)
 - **Payment Success:** Green (3066993)
+- **Player Charged:** Green (3066993)
 - **Reminder Applied:** Yellow (16776960)
 
 ---
