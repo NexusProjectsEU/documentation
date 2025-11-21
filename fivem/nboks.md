@@ -10,28 +10,6 @@ A modern invoice and fine management system for FiveM with support for multiple 
 
 ---
 
-## Table of Contents
-
-- [Installation](#installation)
-- [Configuration](#configuration)
-  - [Shared Config](#shared-config-sh_configlua)
-  - [Server Config](#server-config-sv_configlua)
-- [Database Setup](#database-setup)
-- [Commands](#commands)
-- [Exports](#exports)
-  - [sendInvoice](#sendinvoice)
-  - [forcePayInvoice](#forcepayinvoice)
-  - [checkReminders](#checkreminders)
-- [Events](#events)
-  - [Server Events](#server-events)
-  - [Client Events](#client-events)
-- [NUI Callbacks](#nui-callbacks)
-- [Integration Examples](#integration-examples)
-- [Reminder System](#reminder-system)
-- [Discord Webhook](#discord-webhook)
-
----
-
 ## Installation
 
 1. Place the `nboks` folder in your server's `resources` directory
