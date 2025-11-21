@@ -437,7 +437,7 @@ nboks.sv.reminderSystem = {
     enabled = true,
     feePercent = 10,        -- 10% fee per reminder
     checkInterval = 24,     -- Check every 24 hours
-    maxReminders = 3,       -- Max 3 reminders
+    maxReminders = 3,       -- Max 3 reminders (0 = unlimited)
     applyToFinesOnly = true -- Only fines, not invoices
 }
 ```
