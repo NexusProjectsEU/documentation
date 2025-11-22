@@ -72,6 +72,7 @@ CREATE TABLE IF NOT EXISTS `invoices` (
   `lastReminderCheck` datetime DEFAULT NULL,
   `reminderCount` int(11) DEFAULT 0,
   `reminderAudit` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `metadata` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `identifier` (`identifier`),
   KEY `isPaid` (`isPaid`)
@@ -100,7 +101,7 @@ Sends an invoice or fine to a player.
 
 **Syntax:**
 ```lua
-exports['nboks']:sendInvoice(identifier, sender, senderidentifier, invoiceType, amount, description)
+exports['nboks']:sendInvoice(identifier, sender, senderidentifier, invoiceType, amount, description, metadata)
 ```
 
 **Parameters:**
@@ -110,8 +111,38 @@ exports['nboks']:sendInvoice(identifier, sender, senderidentifier, invoiceType, 
 - `invoiceType` (string) - Type of invoice: `"fine"` or `"invoice"`
 - `amount` (number) - Invoice amount
 - `description` (string) - Description of the invoice (optional)
+- `metadata` (table) - Array of breakdown items (optional) - displayed as a table in the UI
+
+**Metadata Structure:**
+```lua
+{
+    { title = "Item description", amount = 1000 },
+    { title = "Another item", amount = 500 }
+}
+```
 
 **Returns:** Creates invoice in database and notifies the player if online
+
+**Example with metadata (Police fine with law breakdown):**
+```lua
+local metadata = {
+    { title = "Straffelovens § 119 - Vold mod tjenestemand", amount = 5000 },
+    { title = "Færdselslovens § 3 - Hensynsløs kørsel", amount = 2500 },
+    { title = "Våbenlovens § 1 - Ulovlig våbenbesiddelse", amount = 7500 }
+}
+
+exports['nboks']:sendInvoice(
+    identifier,
+    "Politiet",
+    officerIdentifier,
+    "fine",
+    15000,
+    "Sigtelse for flere lovovertrædelser",
+    metadata
+)
+```
+
+The metadata will be displayed as a breakdown table in the invoice details view, showing each item with its amount and a total at the bottom.
 
 ---
 
@@ -223,6 +254,99 @@ end
 
 ---
 
+### getInvoices
+
+Retrieves invoices from the database with flexible filtering options.
+
+**Syntax:**
+```lua
+local result = exports['nboks']:getInvoices(filters)
+```
+
+**Filter Parameters (all optional):**
+```lua
+{
+    identifier = "1",           -- Filter by receiver identifier
+    sender = "Politiet",             -- Filter by sender name
+    senderidentifier = "5",     -- Filter by sender identifier
+    type = "fine",                   -- Filter by type: "fine" or "invoice"
+    status = "unpaid",               -- Filter by status: "paid", "unpaid", or "all"
+    limit = 50,                      -- Max results (default: 100)
+    orderBy = "date_desc"            -- Order: "date_desc", "date_asc", "amount_desc", "amount_asc"
+}
+```
+
+**Returns:**
+```lua
+{
+    success = true,
+    invoices = { ... },  -- Array of invoice objects
+    count = 10           -- Number of results
+}
+```
+
+**Examples:**
+
+```lua
+-- Get all unpaid fines from "Politiet"
+local result = exports['nboks']:getInvoices({
+    sender = "Politiet",
+    type = "fine",
+    status = "unpaid"
+})
+
+if result.success then
+    print("Found " .. result.count .. " unpaid fines")
+    for _, invoice in ipairs(result.invoices) do
+        print(invoice.id .. " - " .. invoice.amount .. " kr.")
+    end
+end
+
+-- Get all invoices for a specific player
+local result = exports['nboks']:getInvoices({
+    identifier = playerIdentifier,
+    status = "all"
+})
+
+-- Get fines sent by a specific officer
+local result = exports['nboks']:getInvoices({
+    senderidentifier = officerIdentifier,
+    type = "fine",
+    orderBy = "date_desc",
+    limit = 20
+})
+
+-- Get highest unpaid invoices
+local result = exports['nboks']:getInvoices({
+    status = "unpaid",
+    orderBy = "amount_desc",
+    limit = 10
+})
+```
+
+**Invoice Object Structure:**
+```lua
+{
+    id = "INV_1234567890_5678",
+    identifier = "1",           -- Receiver
+    sender = "Politiet",
+    senderidentifier = "5",     -- Can be nil
+    type = "fine",
+    amount = 5000,
+    createdAt = "2025-01-15 14:30:00",
+    description = "Speeding violation",
+    isPaid = false,
+    reminderCount = 2,
+    reminderAudit = { ... },
+    metadata = {                     -- Optional breakdown items
+        { title = "Item 1", amount = 2500 },
+        { title = "Item 2", amount = 2500 }
+    }
+}
+```
+
+---
+
 ## Events
 
 ### Server Events
@@ -297,7 +421,8 @@ TriggerClientEvent("nboks:client:setInvoices", source, invoices)
     createdAt = "2025-01-15 14:30:00",
     description = "Speeding violation",
     isPaid = false,
-    reminderAudit = {}
+    reminderAudit = {},
+    metadata = {}  -- Optional breakdown items
 }
 ```
 
@@ -447,32 +572,6 @@ RegisterCommand("mechanicbill", function(source, args)
         })
     end
 end, false)
-```
-
----
-
-### Government Tax System
-
-```lua
-CreateThread(function()
-    while true do
-        Wait(2592000000)
-
-        local players = getAllPlayers()
-        for _, playerId in pairs(players) do
-            local identifier = getPlayerIdentifier(playerId)
-
-            exports['nboks']:sendInvoice(
-                identifier,
-                "Tax Authority",
-                nil,
-                "invoice",
-                5000,
-                "Monthly property tax"
-            )
-        end
-    end
-end)
 ```
 
 ---
