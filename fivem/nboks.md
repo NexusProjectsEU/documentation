@@ -15,7 +15,8 @@ A modern invoice and fine management system for FiveM with support for multiple 
 1. Place the `nboks` folder in your server's `resources` directory
 2. Add `ensure nboks` to your `server.cfg`
 3. Import the SQL file to create the required database table
-4. Configure `sh_config.lua` and `sv_config.lua` to match your server setup
+4. Configure your license key in `sv_config.lua`
+5. Configure `sh_config.lua` and `sv_config.lua` to match your server setup
 
 ---
 
@@ -37,8 +38,13 @@ nboks.sh.currency = "€"       -- Currency symbol (e.g., "kr.", "$", "€", "£
 ### Server Config (`sv_config.lua`)
 
 ```lua
-nboks.sv.discordwebhook = ""  -- Discord webhook URL for logging
+-- License Key (required)
+nboks.sv.licensekey = "INSERT-LICENSE"
 
+-- Discord Webhook (optional)
+nboks.sv.discordwebhook = ""
+
+-- Reminder System
 nboks.sv.reminderSystem = {
     enabled = true,           -- Enable/disable reminder system
     feePercent = 10,         -- Fee percentage per reminder (%)
@@ -47,6 +53,8 @@ nboks.sv.reminderSystem = {
     applyToFinesOnly = false -- Only apply reminders to fines
 }
 ```
+
+**License Key:** Your unique license key from purchase (required)
 
 **Discord Webhook:** Logs invoice creation, payments, and reminder fees
 
@@ -66,13 +74,13 @@ CREATE TABLE IF NOT EXISTS `invoices` (
   `senderidentifier` varchar(50) DEFAULT NULL,
   `type` varchar(20) NOT NULL,
   `amount` int(11) NOT NULL,
-  `createdAt` datetime NOT NULL,
+  `createdAt` DATETIME NOT NULL,
   `description` text DEFAULT NULL,
   `isPaid` tinyint(1) NOT NULL DEFAULT 0,
-  `lastReminderCheck` datetime DEFAULT NULL,
-  `reminderCount` int(11) DEFAULT 0,
-  `reminderAudit` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  `metadata` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `lastReminderCheck` DATETIME DEFAULT NULL,
+  `reminderCount` int(11) NOT NULL DEFAULT 0,
+  `reminderAudit` JSON DEFAULT NULL,
+  `metadata` JSON DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `identifier` (`identifier`),
   KEY `isPaid` (`isPaid`)
@@ -266,9 +274,9 @@ local result = exports['nboks']:getInvoices(filters)
 **Filter Parameters (all optional):**
 ```lua
 {
-    identifier = "1",           -- Filter by receiver identifier
+    identifier = "char1:1234",           -- Filter by receiver identifier
     sender = "Politiet",             -- Filter by sender name
-    senderidentifier = "5",     -- Filter by sender identifier
+    senderidentifier = "char1:1234",     -- Filter by sender identifier
     type = "fine",                   -- Filter by type: "fine" or "invoice"
     status = "unpaid",               -- Filter by status: "paid", "unpaid", or "all"
     limit = 50,                      -- Max results (default: 100)
@@ -328,9 +336,9 @@ local result = exports['nboks']:getInvoices({
 ```lua
 {
     id = "INV_1234567890_5678",
-    identifier = "1",           -- Receiver
+    identifier = "char1:1234",           -- Receiver
     sender = "Politiet",
-    senderidentifier = "5",     -- Can be nil
+    senderidentifier = "char1:1234",     -- Can be nil
     type = "fine",
     amount = 5000,
     createdAt = "2025-01-15 14:30:00",
@@ -519,23 +527,46 @@ AddEventHandler("omik_polititablet:newBillingEvent", function(data)
     local amount = data.fineAmount
     local sender = "Politiet"
     local invoiceType = "fine"
-
     local description = "Politibøde"
+    local metadata = nil
+
     if data.rawData then
-        local titles = {}
+        metadata = {}
+        local count = 0
+
         for _, ticketData in pairs(data.rawData) do
-            if ticketData.ticket and ticketData.ticket.title then
-                table.insert(titles, ticketData.ticket.title)
+            if ticketData.ticket then
+                local title = ticketData.ticket.title or "Ukendt overtrædelse"
+                local ticketAmount = 0
+
+                -- Parse the cols JSON to get the price
+                if ticketData.ticket.cols then
+                    local cols = json.decode(ticketData.ticket.cols)
+                    if cols and cols.price then
+                        ticketAmount = cols.price
+                    end
+                end
+
+                table.insert(metadata, {
+                    title = title,
+                    amount = ticketAmount
+                })
+                count = count + 1
             end
         end
-        if #titles > 0 then
-            description = table.concat(titles, ", ")
+
+        if count == 1 then
+            description = "Bøde for 1 lovovertrædelse"
+        elseif count > 1 then
+            description = "Bøde for " .. count .. " lovovertrædelser"
         end
     end
 
-    exports['nboks']:sendInvoice(identifier, sender, nil, invoiceType, amount, description)
+    exports['nboks']:sendInvoice(identifier, sender, nil, invoiceType, amount, description, metadata)
 end)
 ```
+
+This integration automatically creates a breakdown table showing each law violation and its cost.
 
 ---
 
@@ -685,3 +716,58 @@ QBCore.Functions.TriggerCallback("nboks:server:getInvoices", function(invoices)
     -- Handle invoices
 end)
 ```
+
+---
+
+## License System
+
+N-Boks uses a license validation system to verify your purchase.
+
+### Configuration
+
+Set your license key in `sv_config.lua`:
+
+```lua
+nboks.sv.licensekey = "INSERT-LICENSE"
+```
+
+### How It Works
+
+1. **Initial Validation:** On resource start, the license is validated against our API
+2. **HWID Generation:** A unique Hardware ID is generated and stored in `hwid.dat`
+3. **Heartbeat System:** Continuous validation ensures the resource runs only with a valid license
+4. **Protected Exports:** All exports require a valid license to function
+
+### Console Output
+
+**Successful validation:**
+```
+[N-Boks] Validating license...
+[N-Boks] License validated successfully
+```
+
+**Failed validation:**
+```
+[N-Boks] Validating license...
+[N-Boks] LICENSE VALIDATION FAILED
+[N-Boks] Reason: Invalid license key
+```
+
+### HWID Reset
+
+If you need to reset your HWID (e.g., server migration):
+
+1. Delete the `hwid.dat` file in the resource folder
+2. Restart the resource
+3. A new HWID will be generated automatically
+
+**Note:** You may need to contact support to reset the HWID on the license server.
+
+### Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| "No license key configured" | Set your license key in `sv_config.lua` |
+| "Connection failed" | Check your server's internet connection |
+| "Invalid license" | Verify your license key is correct |
+| "HWID mismatch" | Reset HWID or contact support |
