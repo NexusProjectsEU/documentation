@@ -93,7 +93,7 @@ CREATE TABLE IF NOT EXISTS `nboks_invoices` (
   `id` varchar(50) NOT NULL,
   `identifier` varchar(50) NOT NULL,
   `sender` varchar(100) DEFAULT NULL,
-  `senderidentifier` varchar(50) DEFAULT NULL,
+  `senderidentifier` varchar(50) NOT NULL,
   `type` varchar(20) NOT NULL,
   `amount` int(11) NOT NULL,
   `createdAt` DATETIME NOT NULL,
@@ -192,10 +192,6 @@ auditLogs = true  -- Can view audit logs of all admin actions
 **Force Pay**
 - Removes money from the player's bank account
 - Marks the invoice as paid
-- If sender has a `senderidentifier`, adds money to sender's account
-- Shows different status if player is online/offline
-- **Online:** Removes money + marks paid
-- **Offline:** Only marks as paid (money not removed)
 
 **Refund**
 - Requires invoice to be paid
@@ -236,7 +232,7 @@ exports['nboks']:sendInvoice(identifier, sender, senderidentifier, invoiceType, 
 **Parameters:**
 - `identifier` (string) - Target player's identifier (user_id for vRP, identifier for ESX, citizenid for QB/Qbox)
 - `sender` (string) - Name of the sender (e.g., "Police Department", "City Hall") - **can be `nil`** (will auto-fetch from senderidentifier)
-- `senderidentifier` (string) - Sender's identifier (optional, can be nil)
+- `senderidentifier` (string) - Sender's identifier
 - `invoiceType` (string) - Type of invoice: `"fine"` or `"invoice"`
 - `amount` (number) - Invoice amount
 - `description` (string) - Description of the invoice (optional)
@@ -364,7 +360,7 @@ local result = exports['nboks']:chargePlayer(identifier, sender, senderidentifie
 **Parameters:**
 - `identifier` (string) - Target player's identifier
 - `sender` (string) - Name of the sender
-- `senderidentifier` (string) - Sender's identifier (optional, can be nil)
+- `senderidentifier` (string) - Sender's identifier
 - `invoiceType` (string) - Type of invoice: `"fine"` or `"invoice"`
 - `amount` (number) - Amount to charge
 - `description` (string) - Description (optional)
@@ -430,9 +426,9 @@ local result = exports['nboks']:getInvoices(filters)
 **Filter Parameters (all optional):**
 ```lua
 {
-    identifier = "1",           -- Filter by receiver identifier
+    identifier = "1",                -- Filter by receiver identifier
     sender = "Politiet",             -- Filter by sender name
-    senderidentifier = "5",     -- Filter by sender identifier
+    senderidentifier = "5",          -- Filter by sender identifier
     type = "fine",                   -- Filter by type: "fine" or "invoice"
     status = "unpaid",               -- Filter by status: "paid", "unpaid", or "all"
     limit = 50,                      -- Max results (default: 100, max: 1000)
@@ -496,7 +492,7 @@ local result = exports['nboks']:getInvoices({
     id = "INV_1234567890_5678",
     identifier = "1",           -- Receiver
     sender = "Politiet",        -- Can be nil
-    senderidentifier = "5",     -- Can be nil
+    senderidentifier = "5",
     type = "fine",
     amount = 5000,
     createdAt = "2025-01-15 14:30:00",
